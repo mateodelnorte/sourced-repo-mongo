@@ -1,20 +1,39 @@
 {
   "name": "sourced-repo-mongo",
   "version": "0.0.0",
-  "description": "data store and repository for sourced-style event sourcing models",
+  "description": "mongo data store and repository for sourced-style event sourcing models",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "directories": {
+    "test": "test"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "bluebird": "^1.2.4",
-    "cconfig": "0.0.0",
+    "cconfig": "^0.0.0",
     "debug": "^0.8.1",
     "extend": "^1.2.1",
     "llog": "0.0.0",
+    "lodash": "^2.4.1",
     "mongodb": "^1.4.5",
     "sourced": "0.0.4"
-  }
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node test/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mateodelnorte/sourced-repo-mongo.git"
+  },
+  "keywords": [
+    "sourced",
+    "eventsourcing",
+    "eventsource",
+    "event-source"
+  ],
+  "author": "mattwalters5@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mateodelnorte/sourced-repo-mongo/issues"
+  },
+  "homepage": "https://github.com/mateodelnorte/sourced-repo-mongo"
 }

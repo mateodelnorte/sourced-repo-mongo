@@ -66,7 +66,7 @@ repository.commit(market, function (err) {
         repository.get(market.id, function (err, market4) {
           if (err) throw err;
 
-          console.log(market4)
+          console.log('current market state: ', market4);
 
         });
 
