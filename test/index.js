@@ -5,10 +5,9 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var _ = require('lodash');
 
-sourcedRepoMongo.config.mongoUrl = 'mongodb://127.0.0.1:27017/sourced'
+require('should');
 
-var repository = new Repository(Market);
-
+/* Market model/entity */
 function Market () {
   this.orders = [];
   Entity.apply(this, arguments);
@@ -32,44 +31,90 @@ Market.prototype.createOrder = function (param) {
   this.digest('createOrder', param);
   this.emit('done', param, this);
 };
+/* end Market model/entity */
 
-var market = new Market();
+describe('Repository', function () {
 
-market.init({ id: 'somecusip' });
+  // point us at a local test database
+  sourcedRepoMongo.config.mongoUrl = 'mongodb://127.0.0.1:27017/sourced'
 
-market.createOrder({ side: 'b', price: 90, quantity: 1000 });
-market.createOrder({ side: 's', price: 91, quantity: 1000 });
-market.createOrder({ side: 'b', price: 92, quantity: 1000 });
-market.createOrder({ side: 's', price: 93, quantity: 1000 });
-market.createOrder({ side: 'b', price: 94, quantity: 1000 });
-market.createOrder({ side: 's', price: 95, quantity: 1000 });
-market.createOrder({ side: 'b', price: 90, quantity: 1000 });
-market.createOrder({ side: 's', price: 91, quantity: 1000 });
-market.createOrder({ side: 'b', price: 92, quantity: 1000 });
-market.createOrder({ side: 's', price: 93, quantity: 1000 });
-market.createOrder({ side: 'b', price: 94, quantity: 1000 });
+  var repository;
 
-repository.commit(market, function (err) {
-  if (err) throw err;
+  before(function (done) {
+    var mongo = require('../mongo');
+    mongo.once('connected', function (db) {
+      db.collection('Market.events').drop();
+      db.collection('Market.snapshots').drop();
+      repository = new Repository(Market);
+      done();
+    });
+    mongo.connect(sourcedRepoMongo.config.mongoUrl);
+  });
 
-  repository.get(market.id, function (err, market1) {
-    if (err) throw err;
+  it('should initialize market entity and digest 12 events, setting version, snapshotVersion, and price', function (done) {
 
+    var id = 'somecusip';
+    var mrkt = new Market();
 
-    market1.createOrder({ side: 'b', price: 90, quantity: 1000 });
-    market1.createOrder({ side: 's', price: 91, quantity: 1000 });
+    mrkt.init({ id: id });
 
+    mrkt.createOrder({ side: 'b', price: 90, quantity: 1000 });
+    mrkt.createOrder({ side: 's', price: 91, quantity: 1000 });
+    mrkt.createOrder({ side: 'b', price: 92, quantity: 1000 });
+    mrkt.createOrder({ side: 's', price: 93, quantity: 1000 });
+    mrkt.createOrder({ side: 'b', price: 94, quantity: 1000 });
+    mrkt.createOrder({ side: 's', price: 95, quantity: 1000 });
+    mrkt.createOrder({ side: 'b', price: 90, quantity: 1000 });
+    mrkt.createOrder({ side: 's', price: 91, quantity: 1000 });
+    mrkt.createOrder({ side: 'b', price: 92, quantity: 1000 });
+    mrkt.createOrder({ side: 's', price: 93, quantity: 1000 });
+    mrkt.createOrder({ side: 'b', price: 94, quantity: 1000 });
 
-    repository.commit(market1, function (err) {
+    mrkt.should.have.property('version', 12);
+    mrkt.should.have.property('snapshotVersion', 0);
+    mrkt.should.have.property('price', 92.27272727272727);
+
+    repository.commit(mrkt, function (err) {
       if (err) throw err;
 
-        repository.get(market.id, function (err, market4) {
-          if (err) throw err;
+      repository.get(id, function (err, market) {
+        if (err) throw err;
 
-          console.log('current market state: ', market4);
+        market.should.have.property('version', 12);
+        market.should.have.property('snapshotVersion', 12);
+        market.should.have.property('price', 92.27272727272727);
 
-        });
+        done();
 
+      });
     });
+  });
+
+  it('should load deserialize market entity from snapshot, digest two events, and update version, snapshotVersion, and price', function (done) {
+
+    var id = 'somecusip';
+
+    repository.get(id, function (err, mrkt) {
+      if (err) throw err;
+
+      mrkt.createOrder({ side: 'b', price: 90, quantity: 1000 });
+      mrkt.createOrder({ side: 's', price: 91, quantity: 1000 });
+
+      repository.commit(mrkt, function (err) {
+        if (err) throw err;
+
+          repository.get(id, function (err, market) {
+            if (err) throw err;
+
+            market.should.have.property('version', 14);
+            market.should.have.property('snapshotVersion', 12);
+            market.should.have.property('price', 92);
+
+            done();
+
+          });
+
+      });
+    })
   })
-})
+});

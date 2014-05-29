@@ -1,5 +1,5 @@
 var EventEmitter = require('events').EventEmitter;
-var log = require('debug')('sourced-mongo-repo');
+var log = require('debug')('sourced-repo-mongo');
 var client = require('mongodb').MongoClient;
 var util = require('util');
 

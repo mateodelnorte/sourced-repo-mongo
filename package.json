@@ -14,11 +14,14 @@
     "llog": "0.0.0",
     "lodash": "^2.4.1",
     "mongodb": "^1.4.5",
-    "sourced": "0.0.4"
+    "sourced": "0.0.5"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "mocha": "^1.20.0",
+    "should": "^4.0.0"
+  },
   "scripts": {
-    "test": "node test/index.js"
+    "test": "DEBUG= ./node_modules/.bin/mocha test -R spec"
   },
   "repository": {
     "type": "git",

@@ -1,5 +1,5 @@
 var Entity = require('sourced').Entity;
-var log = require('debug')('sourced-mongo-repo');
+var log = require('debug')('sourced-repo-mongo');
 var mongo = require('./mongo');
 var Promise = require('bluebird');
 var util = require('util');
