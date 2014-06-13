@@ -1,4 +1,5 @@
 var Entity = require('sourced').Entity;
+var EventEmitter = require('events').EventEmitter;
 var log = require('debug')('sourced-repo-mongo');
 var mongo = require('./mongo');
 var Promise = require('bluebird');
@@ -10,6 +11,7 @@ module.exports.config = {
 };
 
 function Repository (entityType, indices) {
+  EventEmitter.call(this);
   indices = _.union(indices, ['id']);
   var self = this;
   self.entityType = entityType;
@@ -29,12 +31,15 @@ function Repository (entityType, indices) {
       });
       log('initialized %s entity store', self.entityType.name);
       resolve();
+      self.emit('ready');
     });
     self.mongo.once('error', reject);
   });
   log('connecting to %s entity store', this.entityType.name);
   self.mongo.connect(module.exports.config.mongoUrl);  
 }
+
+util.inherits(Repository, EventEmitter);
 
 Repository.prototype.get = function get (id, cb) {
   var self = this;
@@ -47,17 +52,14 @@ Repository.prototype.get = function get (id, cb) {
       .toArray(function (err, docs) {
         if (err) return cb(err);
         var snapshot = docs[0];
-        if (snapshot === undefined) {
-          return self.empty(id, cb);
-        } else {
-          self.events.find({ id: id, version: { $gt: snapshot.version } })
-            .sort({ version: 1 })
-            .toArray(function (err, events) {
-              if (err) return cb(err);
-              delete snapshot._id;
-              return self.deserialize(snapshot, events, cb);
-            });
-        }
+        var criteria = (snapshot) ? { id: id, version: { $gt: snapshot.version } } : { id: id };
+        self.events.find(criteria)
+          .sort({ version: 1 })
+          .toArray(function (err, events) {
+            if (err) return cb(err);
+            if (snapshot) delete snapshot._id;
+            return self.deserialize(id, snapshot, events, cb);
+          });
     });
   });
 };
@@ -80,6 +82,7 @@ Repository.prototype.commit = function commit (entity, cb) {
       }  
     }).done(function (entity) {
       // when finished, save events
+      if (entity.newEvents.length === 0) return cb();
       var events = entity.newEvents;
       events.forEach(function (event) {
         self.indices.forEach(function (index) {
@@ -95,16 +98,11 @@ Repository.prototype.commit = function commit (entity, cb) {
   });
 };
 
-Repository.prototype.empty = function empty (id, cb) {
-  log('creating empty %s for id %s', this.entityType.name, id);
-  var entity = new this.entityType();
+Repository.prototype.deserialize = function deserialize (id, snapshot, events, cb) {
+  log('deserializing %s entity ', this.entityType.name);
+  var entity = new this.entityType(snapshot, events);
   entity.id = id;
   return cb(null, entity);
-};
-
-Repository.prototype.deserialize = function deserialize (snapshot, events, cb) {
-  log('deserializing %s snapshot', this.entityType.name);
-  return cb(null, new this.entityType(snapshot, events));
 };
 
 module.exports.Repository = Repository;
