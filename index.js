@@ -72,6 +72,7 @@ Repository.prototype.commit = function commit (entity, cb) {
     new Promise(function (resolve, reject) {
       if (entity.version >= entity.snapshotVersion + 10) {
         var snapshot = entity.snapshot();  
+        if (snapshot && snapshot._id) delete snapshot._id; // mongo will blow up if we try to insert multiple _id keys
         self.snapshots.insert(snapshot, function (err) {
           if (err) return reject(err);
           log('committed %s.snapshot for id %s %j', self.entityType.name, entity.id, snapshot);
@@ -85,6 +86,7 @@ Repository.prototype.commit = function commit (entity, cb) {
       if (entity.newEvents.length === 0) return cb();
       var events = entity.newEvents;
       events.forEach(function (event) {
+        if (event && event._id) delete event._id; // mongo will blow up if we try to insert multiple _id keys
         self.indices.forEach(function (index) {
           event[index] = entity[index];
         });
