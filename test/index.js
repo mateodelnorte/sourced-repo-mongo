@@ -97,8 +97,17 @@ describe('Repository', function () {
     repository.get(id, function (err, mrkt) {
       if (err) throw err;
 
+      mrkt.should.have.property('version', 12);
+      mrkt.should.have.property('snapshotVersion', 12);
+      mrkt.should.have.property('price', 92.27272727272727);
+
       mrkt.createOrder({ side: 'b', price: 90, quantity: 1000 });
       mrkt.createOrder({ side: 's', price: 91, quantity: 1000 });
+
+      mrkt.should.have.property('version', 14);
+      mrkt.should.have.property('snapshotVersion', 12);
+      mrkt.should.have.property('price', 92);
+      mrkt.newEvents.should.have.property('length', 2);
 
       repository.commit(mrkt, function (err) {
         if (err) throw err;
@@ -109,6 +118,7 @@ describe('Repository', function () {
             market.should.have.property('version', 14);
             market.should.have.property('snapshotVersion', 12);
             market.should.have.property('price', 92);
+            market.newEvents.should.have.property('length', 0);
 
             done();
 
