@@ -1,4 +1,5 @@
 var Entity = require('sourced').Entity;
+var log = require('debug')('sourced-repo-mongo');
 var sourcedRepoMongo = require('../index');
 var Repository = sourcedRepoMongo.Repository;
 var EventEmitter = require('events').EventEmitter;
@@ -125,6 +126,42 @@ describe('Repository', function () {
           });
 
       });
+    });
+
+  });
+
+  it('should emit all enqueued eventsToEmit after only after committing', function (done) {
+
+    var id = 'somecusip';
+
+    repository.get(id, function (err, market) {
+      if (err) throw err;
+
+      market.on('myEventHappened', function (data, data2) {
+        market.eventsToEmit.should.have.property('length', 0);
+        market.newEvents.should.have.property('length', 0);
+        data.should.have.property('data', 'data');
+        data2.should.have.property('data2', 'data2');
+        done();
+      });
+
+      market.enqueue('myEventHappened', { data: 'data' }, { data2: 'data2' });
+      
+      repository.commit(market, function (err) {
+        if (err) throw err;
+
+          repository.get(id, function (err, market) {
+            if (err) throw err;
+
+            market.should.have.property('version', 14);
+            market.should.have.property('snapshotVersion', 12);
+            market.should.have.property('price', 92);
+            market.newEvents.should.have.property('length', 0);
+
+          });
+
+      });
     })
-  })
+
+  });
 });

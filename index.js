@@ -82,8 +82,18 @@ Repository.prototype.commit = function commit (entity, cb) {
         resolve(entity);
       }  
     }).done(function (entity) {
+      function done () {
+        var eventsToEmit = entity.eventsToEmit;
+        entity.eventsToEmit = [];
+        eventsToEmit.forEach(function (eventToEmit) {
+          var args = Array.prototype.slice.call(eventToEmit);
+          self.entityType.prototype.emit.apply(entity, args);
+        });
+        log('emitted local events for id %s', entity.id);
+        return cb();
+      } 
       // when finished, save events
-      if (entity.newEvents.length === 0) return cb();
+      if (entity.newEvents.length === 0) return done();
       var events = entity.newEvents;
       events.forEach(function (event) {
         if (event && event._id) delete event._id; // mongo will blow up if we try to insert multiple _id keys
@@ -94,7 +104,7 @@ Repository.prototype.commit = function commit (entity, cb) {
       self.events.insert(events, function (err) {
         if (err) return cb(err);
         log('committed %s.events for id %s', self.entityType.name, entity.id);
-        return cb();
+        return done();
       });
     });
   });
