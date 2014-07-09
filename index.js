@@ -104,6 +104,7 @@ Repository.prototype.commit = function commit (entity, cb) {
       self.events.insert(events, function (err) {
         if (err) return cb(err);
         log('committed %s.events for id %s', self.entityType.name, entity.id);
+        entity.newEvents = [];
         return done();
       });
     });
