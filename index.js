@@ -77,7 +77,7 @@ Repository.prototype.commit = function commit (entity, cb) {
           if (err) return reject(err);
           log('committed %s.snapshot for id %s %j', self.entityType.name, entity.id, snapshot);
           resolve(entity);
-        })
+        });
       } else {
         resolve(entity);
       }  

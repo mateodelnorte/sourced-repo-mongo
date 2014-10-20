@@ -1,6 +1,6 @@
 {
   "name": "sourced-repo-mongo",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "mongo data store and repository for sourced-style event sourcing models",
   "main": "index.js",
   "directories": {
@@ -14,7 +14,7 @@
     "llog": "0.0.0",
     "lodash": "^2.4.1",
     "mongodb": "^1.4.5",
-    "sourced": "0.0.7"
+    "sourced": "0.0.13"
   },
   "devDependencies": {
     "mocha": "^1.20.0",
