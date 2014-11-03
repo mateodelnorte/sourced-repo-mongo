@@ -1,5 +1,6 @@
 var Entity = require('sourced').Entity;
 var log = require('debug')('sourced-repo-mongo');
+var mongo = require('../mongo');
 var sourcedRepoMongo = require('../index');
 var Repository = sourcedRepoMongo.Repository;
 var EventEmitter = require('events').EventEmitter;
@@ -20,7 +21,7 @@ Market.prototype.init = function (param) {
   this.id = param.id;
   this.digest('init', param);
   this.emit('initialized', param, this);
-}
+};
 
 Market.prototype.createOrder = function (param) {
   this.orders.push(param);
@@ -36,9 +37,6 @@ Market.prototype.createOrder = function (param) {
 
 describe('Repository', function () {
 
-  // point us at a local test database
-  sourcedRepoMongo.config.mongoUrl = 'mongodb://127.0.0.1:27017/sourced'
-
   var repository;
 
   before(function (done) {
@@ -49,7 +47,7 @@ describe('Repository', function () {
       repository = new Repository(Market);
       done();
     });
-    mongo.connect(sourcedRepoMongo.config.mongoUrl);
+    mongo.connect('mongodb://127.0.0.1:27017/sourced');
   });
 
   it('should initialize market entity and digest 12 events, setting version, snapshotVersion, and price', function (done) {

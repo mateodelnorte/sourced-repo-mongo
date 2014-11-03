@@ -6,37 +6,32 @@ var Promise = require('bluebird');
 var util = require('util');
 var _ = require('lodash');
 
-module.exports.config = {
-  mongoUrl: 'mongodb://127.0.0.1:27017'
-};
-
 function Repository (entityType, indices) {
   EventEmitter.call(this);
+  if ( ! mongo.db) {
+    throw new Error('mongo has not been initialized. you must call require(\'sourced-repo-mongo/mongo\').connect(config.MONGO_URL); before instantiating a Repository');
+  }
   indices = _.union(indices, ['id']);
   var self = this;
+  var db = mongo.db;
   self.entityType = entityType;
   self.indices = indices;
-  self.mongo = mongo;
   self.initialized = new Promise(function (resolve, reject) {
-    self.mongo.once('connected', function (db) {
-      var snapshotCollectionName = util.format('%s.snapshots', entityType.name);
-      var snapshots = db.collection(snapshotCollectionName);
-      self.snapshots = snapshots;
-      var eventCollectionName = util.format('%s.events', entityType.name);
-      var events = db.collection(eventCollectionName);
-      self.events = events;
-      self.indices.forEach(function (index) {
-        snapshots.ensureIndex(index, reject);
-        events.ensureIndex(index, reject);
-      });
-      log('initialized %s entity store', self.entityType.name);
-      resolve();
-      self.emit('ready');
+    var snapshotCollectionName = util.format('%s.snapshots', entityType.name);
+    var snapshots = db.collection(snapshotCollectionName);
+    self.snapshots = snapshots;
+    var eventCollectionName = util.format('%s.events', entityType.name);
+    var events = db.collection(eventCollectionName);
+    self.events = events;
+    self.indices.forEach(function (index) {
+      snapshots.ensureIndex(index, reject);
+      events.ensureIndex(index, reject);
     });
-    self.mongo.once('error', reject);
+    log('initialized %s entity store', self.entityType.name);
+    resolve();
+    self.emit('ready');
   });
-  log('connecting to %s entity store', this.entityType.name);
-  self.mongo.connect(module.exports.config.mongoUrl);  
+  log('connecting to %s entity store', this.entityType.name); 
 }
 
 util.inherits(Repository, EventEmitter);
