@@ -12,6 +12,7 @@ require('should');
 /* Market model/entity */
 function Market () {
   this.orders = [];
+  this.price = 0;
   Entity.apply(this, arguments);
 }
 
@@ -159,7 +160,100 @@ describe('Repository', function () {
           });
 
       });
-    })
+    });
 
   });
+
+  it('should load multiple deserialized market entities from snapshot, and commit in bulk', function (done) {
+
+    var id = 'somecusip2';
+    var mrkt = new Market();
+
+    var id2 = 'somecusip3';
+    var mrkt2 = new Market();
+
+    var id3 = 'somecusip4';
+    var mrkt3 = new Market();
+
+    var id4 = 'somecusip5';
+    var mrkt4 = new Market();
+
+    mrkt.init({ id: id });
+    mrkt2.init({ id: id2 });
+    mrkt3.init({ id: id3 });
+    mrkt4.init({ id: id4 });
+
+    mrkt.createOrder({ side: 'b', price: 90, quantity: 1001 });
+
+    mrkt2.createOrder({ side: 'b', price: 90, quantity: 1002 });
+    mrkt2.createOrder({ side: 'b', price: 90, quantity: 1003 });
+
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1004 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1005 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1006 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1007 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1008 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1009 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1010 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1011 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1012 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1013 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1014 });
+    mrkt3.createOrder({ side: 'b', price: 90, quantity: 1015 });
+
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1016 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1017 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1018 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1019 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1020 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1022 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1023 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1024 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1025 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1026 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1027 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1028 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1029 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1030 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1031 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1032 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1033 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1034 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1035 });
+    mrkt4.createOrder({ side: 'b', price: 90, quantity: 1036 });
+
+    repository.commitAll([mrkt, mrkt2, mrkt3, mrkt4], function (err) {
+      if (err) return done(err);
+
+      repository.getAll([ id, id2, id3, id4 ], function (err, markets) {
+        if (err) return done(err);
+
+        var market = markets[0];
+        var market2 = markets[1];
+        var market3 = markets[2];
+        var market4 = markets[3];
+
+        market.should.have.property('id', id);
+        market.should.have.property('version', 2);
+        market.should.have.property('snapshotVersion', 0);
+
+        market2.should.have.property('id', id2);
+        market2.should.have.property('version', 3);
+        market2.should.have.property('snapshotVersion', 0);
+
+        market3.should.have.property('id', id3);
+        market3.should.have.property('version', 13);
+        market3.should.have.property('snapshotVersion', 13);
+
+        market4.should.have.property('id', id4);
+        market4.should.have.property('version', 21);
+        market4.should.have.property('snapshotVersion', 21);
+
+        done();
+
+      });
+    });
+
+  });
+
 });
