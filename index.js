@@ -11,7 +11,7 @@ function Repository (entityType, indices) {
   if ( ! mongo.db) {
     throw new Error('mongo has not been initialized. you must call require(\'sourced-repo-mongo/mongo\').connect(config.MONGO_URL); before instantiating a Repository');
   }
-  indices = _.union(indices, ['id']);
+  indices = _.union(indices, ['id', 'version']);
   var self = this;
   var db = mongo.db;
   self.entityType = entityType;
@@ -27,6 +27,7 @@ function Repository (entityType, indices) {
       snapshots.ensureIndex(index, reject);
       events.ensureIndex(index, reject);
     });
+    snapshots.ensureIndex('snapshotVersion', reject);
     log('initialized %s entity store', self.entityType.name);
     resolve();
     self.emit('ready');
@@ -40,8 +41,8 @@ Repository.prototype.commit = function commit (entity, cb) {
   var self = this;
   log('committing %s for id %s', this.entityType.name, entity.id);
   this.initialized.done(function () {
-    self._commitSnapshots(entity).then(function _afterCommitSnapshots () {
-      self._commitEvents(entity).then(function _afterCommitEvents () {
+    self._commitEvents(entity).then(function _afterCommitEvents () {
+      self._commitSnapshots(entity).then(function _afterCommitSnapshots () {
         self._emitEvents(entity).then(function _afterEmitEvents () {
           return cb();
         });
@@ -54,8 +55,8 @@ Repository.prototype.commitAll = function commit (entities, cb) {
   var self = this;
   log('committing %s for id %j', this.entityType.name, _.pluck(entities, 'id'));
   this.initialized.done(function () {
-    self._commitAllSnapshots(entities).then(function _afterCommitSnapshots () {
-      self._commitAllEvents(entities).then(function _afterCommitEvents () {
+    self._commitAllEvents(entities).then(function _afterCommitEvents () {
+      self._commitAllSnapshots(entities).then(function _afterCommitSnapshots () {
         var promises = [];
         entities.forEach(function (entity) {
           promises.push(self._emitEvents(entity));
