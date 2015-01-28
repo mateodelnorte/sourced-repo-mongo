@@ -27,6 +27,8 @@ function Repository (entityType, indices) {
       snapshots.ensureIndex(index, reject);
       events.ensureIndex(index, reject);
     });
+    events.ensureIndex({ id: 1, version: 1 }, reject);
+    snapshots.ensureIndex({ id: 1, version: 1 }, reject);
     snapshots.ensureIndex('snapshotVersion', reject);
     log('initialized %s entity store', self.entityType.name);
     resolve();
