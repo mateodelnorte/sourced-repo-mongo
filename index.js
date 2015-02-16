@@ -39,12 +39,16 @@ function Repository (entityType, indices) {
 
 util.inherits(Repository, EventEmitter);
 
-Repository.prototype.commit = function commit (entity, cb) {
+Repository.prototype.commit = function commit (entity, options, cb) {
+  if (typeof options === 'function') {
+    cb = options;
+    options = {};
+  }
   var self = this;
   log('committing %s for id %s', this.entityType.name, entity.id);
   this.initialized.done(function () {
     self._commitEvents(entity).then(function _afterCommitEvents () {
-      self._commitSnapshots(entity).then(function _afterCommitSnapshots () {
+      self._commitSnapshots(entity, options).then(function _afterCommitSnapshots () {
         self._emitEvents(entity).then(function _afterEmitEvents () {
           return cb();
         });
@@ -53,12 +57,16 @@ Repository.prototype.commit = function commit (entity, cb) {
   });
 };
 
-Repository.prototype.commitAll = function commit (entities, cb) {
+Repository.prototype.commitAll = function commit (entities, options, cb) {
+  if (typeof options === 'function') {
+    cb = options;
+    options = {};
+  }
   var self = this;
   log('committing %s for id %j', this.entityType.name, _.pluck(entities, 'id'));
   this.initialized.done(function () {
     self._commitAllEvents(entities).then(function _afterCommitEvents () {
-      self._commitAllSnapshots(entities).then(function _afterCommitSnapshots () {
+      self._commitAllSnapshots(entities, options).then(function _afterCommitSnapshots () {
         var promises = [];
         entities.forEach(function (entity) {
           promises.push(self._emitEvents(entity));
@@ -159,10 +167,10 @@ Repository.prototype._commitAllEvents = function _commitEvents (entities) {
 };
 
 
-Repository.prototype._commitSnapshots = function _commitSnapshots (entity) {
+Repository.prototype._commitSnapshots = function _commitSnapshots (entity, options) {
   var self = this;
   return new Promise(function (resolve, reject) {
-    if (entity.version >= entity.snapshotVersion + 10) {
+    if (options.forceSnapshot || entity.version >= entity.snapshotVersion + 10) {
       var snapshot = entity.snapshot();  
       if (snapshot && snapshot._id) delete snapshot._id; // mongo will blow up if we try to insert multiple _id keys
       self.snapshots.insert(snapshot, function (err) {
@@ -176,12 +184,12 @@ Repository.prototype._commitSnapshots = function _commitSnapshots (entity) {
   });
 };
 
-Repository.prototype._commitAllSnapshots = function _commitAllSnapshots (entities) {
+Repository.prototype._commitAllSnapshots = function _commitAllSnapshots (entities, options) {
   var self = this;
   return new Promise(function (resolve, reject) {
     var snapshots = [];
     entities.forEach(function (entity) {
-      if (entity.version >= entity.snapshotVersion + 10) {
+      if (options.forceSnapshot || entity.version >= entity.snapshotVersion + 10) {
         var snapshot = entity.snapshot();  
         if (snapshot) {
           if (snapshot._id) delete snapshot._id; // mongo will blow up if we try to insert multiple _id keys)

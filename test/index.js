@@ -256,4 +256,35 @@ describe('Repository', function () {
 
   });
 
+  it('should take snapshot when forceSnapshot provided', function (done) {
+
+    var id = 'somecusip6';
+
+    var mrkt = new Market();
+
+    mrkt.init({ id: id });
+
+    mrkt.createOrder({ side: 'b', price: 90, quantity: 1000 });
+
+    mrkt.should.have.property('version', 2);
+    mrkt.should.have.property('snapshotVersion', 0);
+    mrkt.should.have.property('price', 90);
+
+    repository.commit(mrkt, { forceSnapshot: true }, function (err) {
+      if (err) throw err;
+
+      repository.get(id, function (err, market) {
+        if (err) throw err;
+
+        market.should.have.property('version', 2);
+        market.should.have.property('snapshotVersion', 2);
+        market.should.have.property('price', 90);
+
+        done();
+
+      });
+    });
+  });
+
+
 });
