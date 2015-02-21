@@ -6,16 +6,18 @@ var Promise = require('bluebird');
 var util = require('util');
 var _ = require('lodash');
 
-function Repository (entityType, indices) {
+function Repository (entityType, options) {
+  options = options || {};
   EventEmitter.call(this);
   if ( ! mongo.db) {
     throw new Error('mongo has not been initialized. you must call require(\'sourced-repo-mongo/mongo\').connect(config.MONGO_URL); before instantiating a Repository');
   }
-  indices = _.union(indices, ['id', 'version']);
+  var indices = _.union(options.indices, ['id', 'version']);
   var self = this;
   var db = mongo.db;
   self.entityType = entityType;
   self.indices = indices;
+  self.snapshotFrequency = options.snapshotFrequency || 10;
   self.initialized = new Promise(function (resolve, reject) {
     var snapshotCollectionName = util.format('%s.snapshots', entityType.name);
     var snapshots = db.collection(snapshotCollectionName);
@@ -166,11 +168,10 @@ Repository.prototype._commitAllEvents = function _commitEvents (entities) {
   });
 };
 
-
 Repository.prototype._commitSnapshots = function _commitSnapshots (entity, options) {
   var self = this;
   return new Promise(function (resolve, reject) {
-    if (options.forceSnapshot || entity.version >= entity.snapshotVersion + 10) {
+    if (options.forceSnapshot || entity.version >= entity.snapshotVersion + self.snapshotFrequency) {
       var snapshot = entity.snapshot();  
       if (snapshot && snapshot._id) delete snapshot._id; // mongo will blow up if we try to insert multiple _id keys
       self.snapshots.insert(snapshot, function (err) {
@@ -189,7 +190,7 @@ Repository.prototype._commitAllSnapshots = function _commitAllSnapshots (entitie
   return new Promise(function (resolve, reject) {
     var snapshots = [];
     entities.forEach(function (entity) {
-      if (options.forceSnapshot || entity.version >= entity.snapshotVersion + 10) {
+      if (options.forceSnapshot || entity.version >= entity.snapshotVersion + self.snapshotFrequency) {
         var snapshot = entity.snapshot();  
         if (snapshot) {
           if (snapshot._id) delete snapshot._id; // mongo will blow up if we try to insert multiple _id keys)
