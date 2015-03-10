@@ -239,7 +239,7 @@ Repository.prototype._getAllSnapshots = function _getAllSnapshots (ids) {
       if (idVersionPairs.length === 0) {
         return resolve([]);
       } else if (idVersionPairs.length === 1) {
-        criteria = { id: idVersionPairs[0]._id };
+        criteria = { id: idVersionPairs[0]._id, snapshotVersion: idVersionPairs[0].snapshotVersion };
       } else {
         criteria.$or = [];
         idVersionPairs.forEach(function (pair) {
