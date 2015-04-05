@@ -7,14 +7,12 @@
     "test": "test"
   },
   "dependencies": {
-    "bluebird": "^1.2.4",
     "cconfig": "^0.0.0",
     "debug": "^0.8.1",
     "extend": "^1.2.1",
     "llog": "0.0.0",
     "lodash": "^2.4.1",
     "mongodb": "^1.4.5",
-    "q": "^1.1.2",
     "sourced": "^0.0.13"
   },
   "devDependencies": {
