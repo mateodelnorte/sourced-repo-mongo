@@ -7,7 +7,7 @@ var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var _ = require('lodash');
 
-require('should');
+var should = require('should');
 
 /* Market model/entity */
 function Market () {
@@ -90,7 +90,7 @@ describe('Repository', function () {
     });
   });
 
-  it('should load deserialize market entity from snapshot, digest two events, and update version, snapshotVersion, and price', function (done) {
+  it('should load deserialized market entity from snapshot, digest two events, and update version, snapshotVersion, and price', function (done) {
 
     var id = 'somecusip';
 
@@ -283,8 +283,35 @@ describe('Repository', function () {
         done();
 
       });
+
     });
+
   });
 
+  it('should return null when get called with id of nonexisting entity', function (done) {
+
+    repository.get('fake', function (err, market) {
+      if (err) throw err;
+
+      should(market).eql(null);
+
+      done();
+
+    });
+
+  });
+
+  it('should return null when getAll called with only ids of nonexisting entities', function (done) {
+
+    repository.getAll(['fake'], function (err, market) {
+      if (err) throw err;
+
+      should(market).eql(null);
+
+      done();
+
+    });
+
+  });
 
 });
