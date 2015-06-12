@@ -107,6 +107,7 @@ Repository.prototype.get = function get (id, cb) {
         .toArray(function (err, events) {
           if (err) return cb(err);
           if (snapshot) delete snapshot._id;
+          if ( ! snapshot && ! events.length) return cb(null, null);
           var entity = self._deserialize(id, snapshot, events);
           return cb(null, entity);
         });
@@ -288,6 +289,7 @@ Repository.prototype._getAllEvents = function _getAllEvents (ids, snapshots, cb)
     .sort({ id: 1, version: 1 })
     .toArray(function (err, events) {
       if (err) return cb(err);
+      if ( ! snapshots.length && ! events.length) return cb(null, null);
       var results = [];
       ids.forEach(function (id) {
         var snapshot = _.find(snapshots, function (snapshot) {
