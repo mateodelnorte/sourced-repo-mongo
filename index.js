@@ -36,9 +36,9 @@ function Repository (entityType, options) {
   events.ensureIndex({ id: 1, version: 1 }, error);
   snapshots.ensureIndex({ id: 1, version: 1 }, error);
   snapshots.ensureIndex('snapshotVersion', error);
-  
+
   log('initialized %s entity store', self.entityType.name);
-  
+
   self.emit('ready');
 }
 
@@ -49,7 +49,7 @@ Repository.prototype.commit = function commit (entity, options, cb) {
     cb = options;
     options = {};
   }
-  
+
   var self = this;
 
   log('committing %s for id %s', this.entityType.name, entity.id);
@@ -70,11 +70,11 @@ Repository.prototype.commitAll = function commit (entities, options, cb) {
     cb = options;
     options = {};
   }
-  
+
   var self = this;
-  
+
   log('committing %s for id %j', this.entityType.name, _.pluck(entities, 'id'));
-  
+
   this._commitAllEvents(entities, function _afterCommitEvents (err) {
     if (err) return cb(err);
     self._commitAllSnapshots(entities, options, function _afterCommitSnapshots (err) {
@@ -90,25 +90,41 @@ Repository.prototype.commitAll = function commit (entities, options, cb) {
 };
 
 Repository.prototype.get = function get (id, cb) {
+  return this._getByIndex('id', id, cb);
+};
+
+Repository.prototype._getByIndex = function _getByIndex (index, value, cb) {
   var self = this;
-  
-  log('getting %s for id %s', this.entityType.name, id);
+
+  if (this.indices.indexOf(index) === -1) throw new Error('Cannot get sourced entity type %s by index %s', this.entityType, index);
+
+  log('getting %s for %s %s', this.entityType.name, index, value);
+
+  var criteria = { };
+  criteria[index] = value;
 
   this.snapshots
-    .find({ id: id })
+    .find(criteria)
     .sort({ version: -1 })
     .limit(-1)
     .toArray(function (err, snapshots) {
       if (err) return cb(err);
+
       var snapshot = snapshots[0];
-      var criteria = (snapshot) ? { id: id, version: { $gt: snapshot.version } } : { id: id };
+
+      if (snapshot) criteria.version = { $gt: snapshot.version };
+
       self.events.find(criteria)
         .sort({ version: 1 })
         .toArray(function (err, events) {
           if (err) return cb(err);
           if (snapshot) delete snapshot._id;
           if ( ! snapshot && ! events.length) return cb(null, null);
+
+          var id = (index === 'id') ? value : (snapshot) ? snapshot.id : events[0].id;
+
           var entity = self._deserialize(id, snapshot, events);
+
           return cb(null, entity);
         });
   });
@@ -118,7 +134,7 @@ Repository.prototype.getAll = function getAll (ids, cb) {
   var self = this;
 
   log('getting %ss for ids %j', this.entityType.name, ids);
-  
+
   this._getAllSnapshots(ids, function _afterGetAllSnapshots (err, snapshots) {
     if (err) return cb(err);
     self._getAllEvents(ids, snapshots, function (err, entities) {
@@ -164,9 +180,9 @@ Repository.prototype._commitAllEvents = function _commitEvents (entities, cb) {
     });
     Array.prototype.unshift.apply(events, evnts);
   });
-  
+
   if (events.length === 0) return cb();
-  
+
   self.events.insert(events, function (err) {
     if (err) return cb(err);
     log('committed %s.events for ids %j', self.entityType.name, _.pluck(entities, 'id'));
@@ -182,7 +198,7 @@ Repository.prototype._commitSnapshots = function _commitSnapshots (entity, optio
   var self = this;
 
   if (options.forceSnapshot || entity.version >= entity.snapshotVersion + self.snapshotFrequency) {
-    var snapshot = entity.snapshot();  
+    var snapshot = entity.snapshot();
     if (snapshot && snapshot._id) delete snapshot._id; // mongo will blow up if we try to insert multiple _id keys
     self.snapshots.insert(snapshot, function (err) {
       if (err) return cb(err);
@@ -191,7 +207,7 @@ Repository.prototype._commitSnapshots = function _commitSnapshots (entity, optio
     });
   } else {
     return cb(null, entity);
-  }  
+  }
 
 };
 
@@ -201,7 +217,7 @@ Repository.prototype._commitAllSnapshots = function _commitAllSnapshots (entitie
   var snapshots = [];
   entities.forEach(function (entity) {
     if (options.forceSnapshot || entity.version >= entity.snapshotVersion + self.snapshotFrequency) {
-      var snapshot = entity.snapshot();  
+      var snapshot = entity.snapshot();
       if (snapshot) {
         if (snapshot._id) delete snapshot._id; // mongo will blow up if we try to insert multiple _id keys)
         snapshots.push(snapshot);
@@ -235,7 +251,7 @@ Repository.prototype._emitEvents = function _emitEvents (entity) {
     var args = Array.prototype.slice.call(eventToEmit);
     self.entityType.prototype.emit.apply(entity, args);
   });
-  
+
   log('emitted local events for id %s', entity.id);
 
 };
