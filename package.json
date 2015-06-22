@@ -1,6 +1,6 @@
 {
   "name": "sourced-repo-mongo",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "mongo data store and repository for sourced-style event sourcing models",
   "main": "index.js",
   "directories": {

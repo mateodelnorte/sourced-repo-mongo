@@ -96,7 +96,7 @@ Repository.prototype.get = function get (id, cb) {
 Repository.prototype._getByIndex = function _getByIndex (index, value, cb) {
   var self = this;
 
-  if (this.indices.indexOf(index) === -1) throw new Error('Cannot get sourced entity type %s by index %s', this.entityType, index);
+  if (this.indices.indexOf(index) === -1) throw new Error('Cannot get sourced entity type [%s] by index [%s]', this.entityType, index);
 
   log('getting %s for %s %s', this.entityType.name, index, value);
 
@@ -149,6 +149,8 @@ Repository.prototype._commitEvents = function _commitEvents (entity, cb) {
 
   if (entity.newEvents.length === 0) return cb();
 
+  if ( ! entity.id) return cb(new Error('Cannot commit an entity of type [%s] without an [id] property', this.entityType));
+
   var events = entity.newEvents;
   events.forEach(function (event) {
     if (event && event._id) delete event._id; // mongo will blow up if we try to insert multiple _id keys
@@ -171,6 +173,9 @@ Repository.prototype._commitAllEvents = function _commitEvents (entities, cb) {
   var events = [];
   entities.forEach(function (entity) {
     if (entity.newEvents.length === 0) return;
+
+    if ( ! entity.id) return cb(new Error('Cannot commit an entity of type [%s] without an [id] property', self.entityType));
+
     var evnts = entity.newEvents;
     evnts.forEach(function _applyIndices (event) {
       if (event && event._id) delete event._id; // mongo will blow up if we try to insert multiple _id keys
