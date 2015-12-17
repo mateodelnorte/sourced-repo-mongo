@@ -113,7 +113,6 @@ Repository.prototype._getByIndex = function _getByIndex (index, value, cb) {
       var snapshot = snapshots[0];
 
       if (snapshot) criteria.version = { $gt: snapshot.version };
-
       self.events.find(criteria)
         .sort({ version: 1 })
         .toArray(function (err, events) {
@@ -124,7 +123,6 @@ Repository.prototype._getByIndex = function _getByIndex (index, value, cb) {
           var id = (index === 'id') ? value : (snapshot) ? snapshot.id : events[0].id;
 
           var entity = self._deserialize(id, snapshot, events);
-
           return cb(null, entity);
         });
   });
@@ -132,6 +130,14 @@ Repository.prototype._getByIndex = function _getByIndex (index, value, cb) {
 
 Repository.prototype.getAll = function getAll (ids, cb) {
   var self = this;
+
+  if (typeof ids === 'function') {
+    cb = ids;
+    ids = null;
+    return this.events.distinct('id', function (err, distinctEventIds) {
+      self.getAll(distinctEventIds, cb);
+    });
+  }
 
   log('getting %ss for ids %j', this.entityType.name, ids);
 
