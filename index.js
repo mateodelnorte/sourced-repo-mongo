@@ -141,6 +141,8 @@ Repository.prototype.getAll = function getAll (ids, cb) {
 
   log('getting %ss for ids %j', this.entityType.name, ids);
 
+  if (ids.length === 0) return cb(null, []);
+
   this._getAllSnapshots(ids, function _afterGetAllSnapshots (err, snapshots) {
     if (err) return cb(err);
     self._getAllEvents(ids, snapshots, function (err, entities) {
