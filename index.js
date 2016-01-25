@@ -11,7 +11,7 @@ function Repository (entityType, options) {
   if ( ! mongo.db) {
     throw new Error('mongo has not been initialized. you must call require(\'sourced-repo-mongo/mongo\').connect(config.MONGO_URL); before instantiating a Repository');
   }
-  var indices = _.union(options.indices, ['id', 'version']);
+  var indices = _.union(options.indices, ['id']);
   var self = this;
   var db = mongo.db;
   self.entityType = entityType;
@@ -56,6 +56,7 @@ Repository.prototype.commit = function commit (entity, options, cb) {
 
   this._commitEvents(entity, function _afterCommitEvents (err) {
     if (err) return cb(err);
+
     self._commitSnapshots(entity, options, function _afterCommitSnapshots (err) {
       if (err) return cb(err);
       self._emitEvents(entity);
@@ -160,7 +161,7 @@ Repository.prototype._commitEvents = function _commitEvents (entity, cb) {
   if ( ! entity.id) return cb(new Error('Cannot commit an entity of type [%s] without an [id] property', this.entityType));
 
   var events = entity.newEvents;
-  events.forEach(function (event) {
+  events.forEach(function _applyIndices (event) {
     if (event && event._id) delete event._id; // mongo will blow up if we try to insert multiple _id keys
     self.indices.forEach(function (index) {
       event[index] = entity[index];
