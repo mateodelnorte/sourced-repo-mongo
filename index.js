@@ -142,9 +142,9 @@ Repository.prototype.getAll = function getAll (ids, cb) {
 
   log('getting %ss for ids %j', this.entityType.name, ids);
 
-  if (ids.length === 0) return cb(null, []);
+  if (ids && ids.length === 0) return cb(null, []);
 
-  this._getAllSnapshots(ids, function _afterGetAllSnapshots (err, snapshots) {
+  this._getAllSnapshots(ids, function _afterGetAllSnapshots (err, snapshots, ids) {
     if (err) return cb(err);
     self._getAllEvents(ids, snapshots, function (err, entities) {
       if (err) return cb(err);
@@ -273,29 +273,15 @@ Repository.prototype._emitEvents = function _emitEvents (entity) {
 Repository.prototype._getAllSnapshots = function _getAllSnapshots (ids, cb) {
   var self = this;
 
-  var match = { $match: { id: { $in: ids } } };
-  var group = { $group: { _id: '$id', snapshotVersion: { $last: '$snapshotVersion' } } };
+  var pipeline = [];
 
-  self.snapshots.aggregate([match, group], function (err, idVersionPairs) {
+  if (ids) pipeline.push({ $match: { id: { $in: ids } } });
+
+  pipeline.push({ $group: { _id: '$id', snapshot: { $last: '$$ROOT' } } });
+
+  self.snapshots.aggregate(pipeline, function (err, docs) {
     if (err) return cb(err);
-    var criteria = {};
-    if (idVersionPairs.length === 0) {
-      return cb(null, []);
-    } else if (idVersionPairs.length === 1) {
-      criteria = { id: idVersionPairs[0]._id, snapshotVersion: idVersionPairs[0].snapshotVersion };
-    } else {
-      criteria.$or = [];
-      idVersionPairs.forEach(function (pair) {
-        var cri = { id: pair._id, snapshotVersion: pair.snapshotVersion };
-        criteria.$or.push(cri);
-      });
-    }
-    self.snapshots
-      .find(criteria)
-      .toArray(function (err, snapshots) {
-        if (err) cb(err);
-        return cb(null, snapshots);
-      });
+    cb(null, docs.map(function (doc) { return doc.snapshot; }), ids || docs.map(function (doc) { return doc.snapshot.id; }));
   });
 
 };
