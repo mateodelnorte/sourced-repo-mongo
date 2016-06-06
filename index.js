@@ -26,7 +26,7 @@ function Repository (entityType, options) {
   self.events = events;
 
   var error = function (err) {
-    if (err) return this.emit('error', err);
+    if (err) return self.emit('error', err);
   };
 
   self.indices.forEach(function (index) {
