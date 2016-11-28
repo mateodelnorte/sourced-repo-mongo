@@ -80,9 +80,8 @@ Repository.prototype.commitAll = function commit (entities, options, cb) {
     if (err) return cb(err);
     self._commitAllSnapshots(entities, options, function _afterCommitSnapshots (err) {
       if (err) return cb(err);
-      var promises = [];
       entities.forEach(function (entity) {
-        promises.push(self._emitEvents(entity));
+        self._emitEvents(entity);
       });
       return cb();
     });
