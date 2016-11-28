@@ -274,9 +274,10 @@ Repository.prototype._getAllSnapshots = function _getAllSnapshots (ids, cb) {
   var self = this;
 
   var match = { $match: { id: { $in: ids } } };
+  var sort = { $sort: { snapshotVersion: 1 } };
   var group = { $group: { _id: '$id', snapshotVersion: { $last: '$snapshotVersion' } } };
 
-  self.snapshots.aggregate([match, group], function (err, idVersionPairs) {
+  self.snapshots.aggregate([match, sort, group], function (err, idVersionPairs) {
     if (err) return cb(err);
     var criteria = {};
     if (idVersionPairs.length === 0) {
