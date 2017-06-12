@@ -12,8 +12,8 @@
     "extend": "^1.2.1",
     "llog": "0.0.0",
     "lodash": "^2.4.1",
-    "mongodb": "2.1.18",
-    "sourced": "0.1.1"
+    "mongodb": "2.2.28",
+    "sourced": "0.1.4"
   },
   "devDependencies": {
     "mocha": "^1.20.0",
