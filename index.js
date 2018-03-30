@@ -276,28 +276,30 @@ Repository.prototype._getAllSnapshots = function _getAllSnapshots (ids, cb) {
   var sort = { $sort: { snapshotVersion: 1 } };
   var group = { $group: { _id: '$id', snapshotVersion: { $last: '$snapshotVersion' } } };
 
-  self.snapshots.aggregate([match, sort, group], function (err, idVersionPairs) {
+  self.snapshots.aggregate([match, sort, group], function (err, cursor) {
     if (err) return cb(err);
-    var criteria = {};
-    if (idVersionPairs.length === 0) {
-      return cb(null, []);
-    } else if (idVersionPairs.length === 1) {
-      criteria = { id: idVersionPairs[0]._id, snapshotVersion: idVersionPairs[0].snapshotVersion };
-    } else {
-      criteria.$or = [];
-      idVersionPairs.forEach(function (pair) {
-        var cri = { id: pair._id, snapshotVersion: pair.snapshotVersion };
-        criteria.$or.push(cri);
-      });
-    }
-    self.snapshots
-      .find(criteria)
-      .toArray(function (err, snapshots) {
-        if (err) cb(err);
-        return cb(null, snapshots);
-      });
+    cursor.toArray(function (err, idVersionPairs) {
+      if (err) return cb(err);
+      var criteria = {};
+      if (idVersionPairs.length === 0) {
+        return cb(null, []);
+      } else if (idVersionPairs.length === 1) {
+        criteria = { id: idVersionPairs[0]._id, snapshotVersion: idVersionPairs[0].snapshotVersion };
+      } else {
+        criteria.$or = [];
+        idVersionPairs.forEach(function (pair) {
+          var cri = { id: pair._id, snapshotVersion: pair.snapshotVersion };
+          criteria.$or.push(cri);
+        });
+      }
+      self.snapshots
+        .find(criteria)
+        .toArray(function (err, snapshots) {
+          if (err) cb(err);
+          return cb(null, snapshots);
+        });
+    });
   });
-
 };
 
 Repository.prototype._getAllEvents = function _getAllEvents (ids, snapshots, cb) {
