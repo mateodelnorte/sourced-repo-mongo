@@ -1,6 +1,6 @@
 {
   "name": "sourced-repo-mongo",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "mongo data store and repository for sourced-style event sourcing models",
   "main": "index.js",
   "directories": {
@@ -14,11 +14,11 @@
     "sourced": "0.1.4"
   },
   "devDependencies": {
-    "mocha": "^1.20.0",
+    "mocha": "^5.2.0",
     "should": "^4.0.0"
   },
   "scripts": {
-    "test": "DEBUG= ./node_modules/.bin/mocha test -R spec"
+    "test": "mocha test -R spec --exit"
   },
   "repository": {
     "type": "git",

@@ -52,6 +52,10 @@ describe('Repository', function () {
     mongo.connect('mongodb://127.0.0.1:27017/sourced');
   });
 
+  after(function (done) {
+    mongo.close(done);
+  });
+
   it('should initialize market entity and digest 12 events, setting version, snapshotVersion, and price', function (done) {
 
     var id = 'somecusip';

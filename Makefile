@@ -4,6 +4,6 @@ test:
 	$(MAKE) DEBUG= test-debug
 
 test-debug:
-	DEBUG=$(DEBUG) ./node_modules/.bin/mocha test -R spec
+	DEBUG=$(DEBUG) npm test
 
 .PHONY: test

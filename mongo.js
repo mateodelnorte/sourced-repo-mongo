@@ -6,6 +6,7 @@ var url = require('url');
 var util = require('util');
 
 function Mongo () {
+  this.client = null;
   this.db = null;
   EventEmitter.call(this);
 }
@@ -28,12 +29,21 @@ Mongo.prototype.connect = function connect (mongoUrl) {
       }
       var expanded = url.parse(mongoUrl);
       var dbName = expanded.pathname.replace('/', '');
+      self.client = client;
       var db = client.db(dbName);
       self.db = db;
       log('initialized connection to mongo at %s', mongoUrl);
       self.emit('connected', db);
     });
   })
+};
+
+Mongo.prototype.close = function (cb) {
+  log('closing sourced mongo connection');
+  return this.client.close((err) => {
+    log('closed sourced mongo connection');
+    cb(err)
+  });
 };
 
 module.exports = new Mongo();
