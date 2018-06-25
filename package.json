@@ -8,14 +8,14 @@
   },
   "dependencies": {
     "debug": "^3.1.0",
-    "extend": "^1.2.1",
-    "lodash": "^2.4.1",
-    "mongodb": "^3.0.5",
+    "extend": "^3.0.1",
+    "lodash": "^4.17.10",
+    "mongodb": "^3.0.10",
     "sourced": "0.1.4"
   },
   "devDependencies": {
     "mocha": "^5.2.0",
-    "should": "^4.0.0"
+    "should": "^13.2.1"
   },
   "scripts": {
     "test": "mocha test -R spec --exit"
