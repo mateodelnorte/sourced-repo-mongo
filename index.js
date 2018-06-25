@@ -74,7 +74,7 @@ Repository.prototype.commitAll = function commit (entities, options, cb) {
 
   var self = this;
 
-  log('committing %s for id %j', this.entityType.name, _.pluck(entities, 'id'));
+  log('committing %s for id %j', this.entityType.name, _.map(entities, 'id'));
 
   this._commitAllEvents(entities, function _afterCommitEvents (err) {
     if (err) return cb(err);
@@ -198,7 +198,7 @@ Repository.prototype._commitAllEvents = function _commitEvents (entities, cb) {
 
   self.events.insert(events, function (err) {
     if (err) return cb(err);
-    log('committed %s.events for ids %j', self.entityType.name, _.pluck(entities, 'id'));
+    log('committed %s.events for ids %j', self.entityType.name, _.map(entities, 'id'));
     entities.forEach(function (entity) {
       entity.newEvents = [];
     });
@@ -242,7 +242,7 @@ Repository.prototype._commitAllSnapshots = function _commitAllSnapshots (entitie
 
   self.snapshots.insert(snapshots, function (err) {
     if (err) return cb(err);
-    log('committed %s.snapshot for ids %s %j', self.entityType.name, _.pluck(entities, 'id'), snapshots);
+    log('committed %s.snapshot for ids %s %j', self.entityType.name, _.map(entities, 'id'), snapshots);
     return cb(null, entities);
   });
 
