@@ -14,18 +14,26 @@ util.inherits(Mongo, EventEmitter);
 
 Mongo.prototype.connect = function connect (mongoUrl) {
   var self = this;
-  MongoClient.connect(mongoUrl, function (err, client) {
-    if (err) {
-      log('✗ MongoDB Connection Error. Please make sure MongoDB is running: ', err);
-      self.emit('error', err);
-    }
-    var expanded = url.parse(mongoUrl);
-    var dbName = expanded.pathname.replace('/', '');
-    var db = client.db(dbName);
-    self.db = db;
-    log('initialized connection to mongo at %s', mongoUrl);
-    self.emit('connected', db);
-  });
+  return new Promise((resolve, reject) => {
+    self.on('connected', (db) => {
+      resolve(db)
+    })
+    self.on('error', (err) => {
+      reject(err)
+    })
+    MongoClient.connect(mongoUrl, function (err, client) {
+      if (err) {
+        log('✗ MongoDB Connection Error. Please make sure MongoDB is running: ', err);
+        self.emit('error', err);
+      }
+      var expanded = url.parse(mongoUrl);
+      var dbName = expanded.pathname.replace('/', '');
+      var db = client.db(dbName);
+      self.db = db;
+      log('initialized connection to mongo at %s', mongoUrl);
+      self.emit('connected', db);
+    });
+  })
 };
 
 module.exports = new Mongo();
