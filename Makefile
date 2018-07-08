@@ -1,7 +1,10 @@
 DEBUG=sourced-repo-mongo*
 
 test:
-	$(MAKE) DEBUG= test-debug
+	docker-compose up -d
+	# $(MAKE) DEBUG= test-debug
+	npm run jest
+	docker-compose down --remove-orphans
 
 test-debug:
 	DEBUG=$(DEBUG) npm test
