@@ -1,4 +1,4 @@
-const Entity = require('sourced').Entity;
+const Entity = require('sourced').SourcedEntity;
 const log = require('debug')('sourced-repo-mongo');
 const mongo = require('./mongo.js');
 const sourcedRepoMongo = require('./index.js');

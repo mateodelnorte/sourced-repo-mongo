@@ -1,4 +1,4 @@
-var Entity = require('sourced').EntityProxy;
+var Entity = require('sourced').Entity;
 var log = require('debug')('sourced-repo-mongo');
 var mongo = require('../mongo');
 var sourcedRepoMongo = require('../index');
