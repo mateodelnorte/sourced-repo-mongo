@@ -1,4 +1,4 @@
-var Entity = require('sourced').Entity;
+var Entity = require('sourced').EntityProxy;
 var log = require('debug')('sourced-repo-mongo');
 var mongo = require('../mongo');
 var sourcedRepoMongo = require('../index');
@@ -13,6 +13,7 @@ var should = require('should');
 function Market () {
   this.orders = [];
   this.price = 0;
+
   Entity.apply(this, arguments);
 }
 

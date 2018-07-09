@@ -3,19 +3,17 @@ const log = require('debug')('sourced-repo-mongo');
 const mongo = require('./mongo.js');
 const sourcedRepoMongo = require('./index.js');
 const Repository = sourcedRepoMongo.Repository;
-const EventEmitter = require('events').EventEmitter;
-const util = require('util');
-const _ = require('lodash');
 
 const should = require('should');
 
 /* Market model/entity */
 class Market extends Entity {
-  constructor({snapshot, events} = {}) {
-    super({
-      orders: [],
-      price: 0
-    }, { snapshot, events })
+  constructor(snapshot, events) {
+    super()
+    this.orders = [];
+    this.price = 0;
+
+    this.rehydrate(snapshot, events)
   }
 
   init(param) {
