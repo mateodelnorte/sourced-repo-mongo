@@ -3,7 +3,6 @@ var log = require('debug')('sourced-repo-mongo');
 var mongo = require('../mongo');
 var sourcedRepoMongo = require('../index');
 var Repository = sourcedRepoMongo.Repository;
-var EventEmitter = require('events').EventEmitter;
 var util = require('util');
 var _ = require('lodash');
 
@@ -13,7 +12,6 @@ var should = require('should');
 function Market () {
   this.orders = [];
   this.price = 0;
-
   Entity.apply(this, arguments);
 }
 
