@@ -1,48 +1,51 @@
-var Entity = require('sourced').Entity;
-var log = require('debug')('sourced-repo-mongo');
-var mongo = require('../mongo');
-var sourcedRepoMongo = require('../index');
-var Repository = sourcedRepoMongo.Repository;
-var util = require('util');
-var _ = require('lodash');
+const Entity = require('sourced').SourcedEntity;
+const log = require('debug')('sourced-repo-mongo');
+const mongo = require('./mongo.js');
+const sourcedRepoMongo = require('./index.js');
+const Repository = sourcedRepoMongo.Repository;
 
-var should = require('should');
+const should = require('should');
 
 /* Market model/entity */
-function Market () {
-  this.orders = [];
-  this.price = 0;
-  Entity.apply(this, arguments);
+class Market extends Entity {
+  constructor(snapshot, events) {
+    super()
+    this.orders = [];
+    this.price = 0;
+
+    this.rehydrate(snapshot, events)
+  }
+
+  init(param) {
+    this.id = param.id;
+    this.digest('init', param);
+    this.emit('initialized', param, this);
+  }
+
+  createOrder(param) {
+    this.orders.push(param);
+    var total = 0;
+    this.orders.forEach(function (order) {
+      total += order.price;
+    });
+    this.price = total / this.orders.length;
+    this.digest('createOrder', param);
+    this.emit('done', param, this);
+  };
 }
 
-util.inherits(Market, Entity);
-
-Market.prototype.init = function (param) {
-  this.id = param.id;
-  this.digest('init', param);
-  this.emit('initialized', param, this);
-};
-
-Market.prototype.createOrder = function (param) {
-  this.orders.push(param);
-  var total = 0;
-  this.orders.forEach(function (order) {
-    total += order.price;
-  });
-  this.price = total / this.orders.length;
-  this.digest('createOrder', param);
-  this.emit('done', param, this);
-};
 /* end Market model/entity */
 
 describe('Repository', function () {
 
-  var repository;
+  let repository;
 
   beforeEach(function (done) {
+    log('connecting to mongo')
     mongo.once('connected', function (db) {
       db.collection('Market.events').drop(function () {
         db.collection('Market.snapshots').drop(function () {
+          log('connected to mongo, creating repo')
           repository = new Repository(Market);
           done();
         });
@@ -51,7 +54,7 @@ describe('Repository', function () {
     mongo.connect('mongodb://127.0.0.1:27017/sourced');
   });
 
-  after(function (done) {
+  afterAll(function (done) {
     mongo.close(done);
   });
 
@@ -74,9 +77,9 @@ describe('Repository', function () {
     mrkt.createOrder({ side: 's', price: 93, quantity: 1000 });
     mrkt.createOrder({ side: 'b', price: 94, quantity: 1000 });
 
-    mrkt.should.have.property('version', 12);
-    mrkt.should.have.property('snapshotVersion', 0);
-    mrkt.should.have.property('price', 92.27272727272727);
+    expect(mrkt.version).toBe(12);
+    expect(mrkt.snapshotVersion).toBe(0);
+    expect(mrkt.price).toBe(92.27272727272727);
 
     repository.commit(mrkt, function (err) {
       if (err) throw err;
@@ -84,9 +87,9 @@ describe('Repository', function () {
       repository.get(id, function (err, market) {
         if (err) throw err;
 
-        market.should.have.property('version', 12);
-        market.should.have.property('snapshotVersion', 12);
-        market.should.have.property('price', 92.27272727272727);
+        expect(market.version).toBe(12);
+        expect(market.snapshotVersion).toBe(12);
+        expect(market.price).toBe(92.27272727272727);
 
         done();
 
@@ -113,9 +116,9 @@ describe('Repository', function () {
     mrkt.createOrder({ side: 's', price: 93, quantity: 1000 });
     mrkt.createOrder({ side: 'b', price: 94, quantity: 1000 });
 
-    mrkt.should.have.property('version', 12);
-    mrkt.should.have.property('snapshotVersion', 0);
-    mrkt.should.have.property('price', 92.27272727272727);
+    expect(mrkt.version).toBe(12);
+    expect(mrkt.snapshotVersion).toBe(0);
+    expect(mrkt.price).toBe(92.27272727272727);
 
     repository.commit(mrkt, function (err) {
       if (err) throw err;
@@ -123,17 +126,17 @@ describe('Repository', function () {
       repository.get(id, function (err, mrkt) {
         if (err) throw err;
 
-        mrkt.should.have.property('version', 12);
-        mrkt.should.have.property('snapshotVersion', 12);
-        mrkt.should.have.property('price', 92.27272727272727);
+        expect(mrkt.version).toBe(12);
+        expect(mrkt.snapshotVersion).toBe(12);
+        expect(mrkt.price).toBe(92.27272727272727);
 
         mrkt.createOrder({ side: 'b', price: 90, quantity: 1000 });
         mrkt.createOrder({ side: 's', price: 91, quantity: 1000 });
 
-        mrkt.should.have.property('version', 14);
-        mrkt.should.have.property('snapshotVersion', 12);
-        mrkt.should.have.property('price', 92);
-        mrkt.newEvents.should.have.property('length', 2);
+        expect(mrkt.version).toBe(14);
+        expect(mrkt.snapshotVersion).toBe(12);
+        expect(mrkt.price).toBe(92);
+        expect(mrkt.newEvents.length).toBe(2);
 
         repository.commit(mrkt, function (err) {
           if (err) throw err;
@@ -141,10 +144,10 @@ describe('Repository', function () {
             repository.get(id, function (err, market) {
               if (err) throw err;
 
-              market.should.have.property('version', 14);
-              market.should.have.property('snapshotVersion', 12);
-              market.should.have.property('price', 92);
-              market.newEvents.should.have.property('length', 0);
+              expect(market.version).toBe(14);
+              expect(market.snapshotVersion).toBe(12);
+              expect(market.price).toBe(92);
+              expect(market.newEvents.length).toBe(0);
 
               done();
 
@@ -175,9 +178,9 @@ describe('Repository', function () {
     mrkt.createOrder({ side: 's', price: 93, quantity: 1000 });
     mrkt.createOrder({ side: 'b', price: 94, quantity: 1000 });
 
-    mrkt.should.have.property('version', 12);
-    mrkt.should.have.property('snapshotVersion', 0);
-    mrkt.should.have.property('price', 92.27272727272727);
+    expect(mrkt.version).toBe(12);
+    expect(mrkt.snapshotVersion).toBe(0);
+    expect(mrkt.price).toBe(92.27272727272727);
 
     repository.commit(mrkt, function (err) {
       if (err) throw err;
@@ -187,10 +190,10 @@ describe('Repository', function () {
         if (err) throw err;
 
         market.on('myEventHappened', function (data, data2) {
-          market.eventsToEmit.should.have.property('length', 0);
-          market.newEvents.should.have.property('length', 0);
-          data.should.have.property('data', 'data');
-          data2.should.have.property('data2', 'data2');
+          expect(market.eventsToEmit.length).toBe(0);
+          expect(market.newEvents.length).toBe(0);
+          expect(data.data).toBe('data');
+          expect(data2.data2).toBe('data2');
           done();
         });
 
@@ -202,10 +205,10 @@ describe('Repository', function () {
             repository.get(id, function (err, market) {
               if (err) throw err;
 
-              market.should.have.property('version', 12);
-              market.should.have.property('snapshotVersion', 12);
-              market.should.have.property('price', 92.27272727272727);
-              market.newEvents.should.have.property('length', 0);
+              expect(market.version).toBe(12);
+              expect(market.snapshotVersion).toBe(12);
+              expect(market.price).toBe(92.27272727272727);
+              expect(market.newEvents.length).toBe(0);
 
             });
 
@@ -284,21 +287,21 @@ describe('Repository', function () {
         var market3 = markets[2];
         var market4 = markets[3];
 
-        market.should.have.property('id', id);
-        market.should.have.property('version', 2);
-        market.should.have.property('snapshotVersion', 0);
+        expect(market.id).toBe(id);
+        expect(market.version).toBe(2);
+        expect(market.snapshotVersion).toBe(0);
 
-        market2.should.have.property('id', id2);
-        market2.should.have.property('version', 3);
-        market2.should.have.property('snapshotVersion', 0);
+        expect(market2.id).toBe(id2);
+        expect(market2.version).toBe(3);
+        expect(market2.snapshotVersion).toBe(0);
 
-        market3.should.have.property('id', id3);
-        market3.should.have.property('version', 13);
-        market3.should.have.property('snapshotVersion', 13);
+        expect(market3.id).toBe(id3);
+        expect(market3.version).toBe(13);
+        expect(market3.snapshotVersion).toBe(13);
 
-        market4.should.have.property('id', id4);
-        market4.should.have.property('version', 21);
-        market4.should.have.property('snapshotVersion', 21);
+        expect(market4.id).toBe(id4);
+        expect(market4.version).toBe(21);
+        expect(market4.snapshotVersion).toBe(21);
 
         done();
 
@@ -376,21 +379,21 @@ describe('Repository', function () {
         var market3 = markets[2];
         var market4 = markets[3];
 
-        market.should.have.property('id', id);
-        market.should.have.property('version', 2);
-        market.should.have.property('snapshotVersion', 0);
+        expect(market.id).toBe(id);
+        expect(market.version).toBe(2);
+        expect(market.snapshotVersion).toBe(0);
 
-        market2.should.have.property('id', id2);
-        market2.should.have.property('version', 3);
-        market2.should.have.property('snapshotVersion', 0);
+        expect(market2.id).toBe(id2);
+        expect(market2.version).toBe(3);
+        expect(market2.snapshotVersion).toBe(0);
 
-        market3.should.have.property('id', id3);
-        market3.should.have.property('version', 13);
-        market3.should.have.property('snapshotVersion', 13);
+        expect(market3.id).toBe(id3);
+        expect(market3.version).toBe(13);
+        expect(market3.snapshotVersion).toBe(13);
 
-        market4.should.have.property('id', id4);
-        market4.should.have.property('version', 21);
-        market4.should.have.property('snapshotVersion', 21);
+        expect(market4.id).toBe(id4);
+        expect(market4.version).toBe(21);
+        expect(market4.snapshotVersion).toBe(21);
 
         done();
 
@@ -409,9 +412,9 @@ describe('Repository', function () {
 
     mrkt.createOrder({ side: 'b', price: 90, quantity: 1000 });
 
-    mrkt.should.have.property('version', 2);
-    mrkt.should.have.property('snapshotVersion', 0);
-    mrkt.should.have.property('price', 90);
+    expect(mrkt.version).toBe(2);
+    expect(mrkt.snapshotVersion).toBe(0);
+    expect(mrkt.price).toBe(90);
 
     repository.commit(mrkt, { forceSnapshot: true }, function (err) {
       if (err) throw err;
@@ -419,9 +422,9 @@ describe('Repository', function () {
       repository.get(id, function (err, market) {
         if (err) throw err;
 
-        market.should.have.property('version', 2);
-        market.should.have.property('snapshotVersion', 2);
-        market.should.have.property('price', 90);
+        expect(market.version).toBe(2);
+        expect(market.snapshotVersion).toBe(2);
+        expect(market.price).toBe(90);
 
         done();
 
