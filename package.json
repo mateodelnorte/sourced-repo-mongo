@@ -1,14 +1,13 @@
 {
   "name": "sourced-repo-mongo",
-  "version": "0.5.0",
+  "version": "0.0.0-development",
   "description": "mongo data store and repository for sourced-style event sourcing models",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "debug": "^3.1.0",
-    "extend": "^3.0.1",
+    "debug": "^4.1.0",
     "lodash": "^4.17.10",
     "mongodb": "^3.0.10",
     "sourced": "^2.0.0"
