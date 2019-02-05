@@ -7,12 +7,12 @@ var _ = require('lodash');
 function Repository (entityType, options) {
   options = options || {};
   EventEmitter.call(this);
-  if ( ! mongo.db) {
+  if ( ! options.db && ! mongo.db) {
     throw new Error('mongo has not been initialized. you must call require(\'sourced-repo-mongo/mongo\').connect(config.MONGO_URL); before instantiating a Repository');
   }
   var indices = _.union(options.indices, ['id']);
   var self = this;
-  var db = mongo.db;
+  var db = options.db || mongo.db;
   self.entityType = entityType;
   self.indices = indices;
   self.snapshotFrequency = options.snapshotFrequency || 10;
