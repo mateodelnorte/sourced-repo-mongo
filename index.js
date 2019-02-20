@@ -29,12 +29,12 @@ function Repository (entityType, options) {
   };
 
   self.indices.forEach(function (index) {
-    snapshots.ensureIndex(index, error);
-    events.ensureIndex(index, error);
+    snapshots.createIndex(index, error);
+    events.createIndex(index, error);
   });
-  events.ensureIndex({ id: 1, version: 1 }, error);
-  snapshots.ensureIndex({ id: 1, version: 1 }, error);
-  snapshots.ensureIndex('snapshotVersion', error);
+  events.createIndex({ id: 1, version: 1 }, error);
+  snapshots.createIndex({ id: 1, version: 1 }, error);
+  snapshots.createIndex('snapshotVersion', error);
 
   log('initialized %s entity store', self.entityType.name);
 
@@ -165,7 +165,7 @@ Repository.prototype._commitEvents = function _commitEvents (entity, cb) {
       event[index] = entity[index];
     });
   });
-  self.events.insert(events, function (err) {
+  self.events.insertMany(events, function (err) {
     if (err) return cb(err);
     log('committed %s.events for id %s', self.entityType.name, entity.id);
     entity.newEvents = [];
@@ -195,7 +195,7 @@ Repository.prototype._commitAllEvents = function _commitEvents (entities, cb) {
 
   if (events.length === 0) return cb();
 
-  self.events.insert(events, function (err) {
+  self.events.insertMany(events, function (err) {
     if (err) return cb(err);
     log('committed %s.events for ids %j', self.entityType.name, _.map(entities, 'id'));
     entities.forEach(function (entity) {
@@ -212,7 +212,7 @@ Repository.prototype._commitSnapshots = function _commitSnapshots (entity, optio
   if (options.forceSnapshot || entity.version >= entity.snapshotVersion + self.snapshotFrequency) {
     var snapshot = entity.snapshot();
     if (snapshot && snapshot._id) delete snapshot._id; // mongo will blow up if we try to insert multiple _id keys
-    self.snapshots.insert(snapshot, function (err) {
+    self.snapshots.insertOne(snapshot, function (err) {
       if (err) return cb(err);
       log('committed %s.snapshot for id %s %j', self.entityType.name, entity.id, snapshot);
       return cb(null, entity);
@@ -239,7 +239,7 @@ Repository.prototype._commitAllSnapshots = function _commitAllSnapshots (entitie
 
   if (snapshots.length === 0) return cb();
 
-  self.snapshots.insert(snapshots, function (err) {
+  self.snapshots.insertMany(snapshots, function (err) {
     if (err) return cb(err);
     log('committed %s.snapshot for ids %s %j', self.entityType.name, _.map(entities, 'id'), snapshots);
     return cb(null, entities);
