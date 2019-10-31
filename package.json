@@ -1,27 +1,25 @@
 {
   "name": "sourced-repo-mongo",
-  "version": "0.3.14",
+  "version": "0.0.0-development",
   "description": "mongo data store and repository for sourced-style event sourcing models",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
-    "cconfig": "^0.0.0",
-    "debug": "^0.8.1",
-    "extend": "^1.2.1",
-    "llog": "0.0.0",
-    "lodash": "^2.4.1",
-    "mongodb": "2.2.28",
-    "sourced": "0.1.4"
+    "debug": "^4.1.0",
+    "lodash": "^4.17.10",
+    "mongodb": "^3.0.10",
+    "sourced": "^2.0.0"
   },
   "devDependencies": {
-    "mocha": "^1.20.0",
-    "should": "^4.0.0"
+    "jest": "24.7.1",
+    "mocha": "6.0.0",
+    "should": "13.2.3"
   },
   "scripts": {
-    "test": "DEBUG= ./node_modules/.bin/mocha test -R spec",
-    "pub": "npm publish --registry https://npm.saas-plat.com"
+    "test": "mocha test -R spec --exit",
+    "jest": "jest --coverage --forceExit"
   },
   "repository": {
     "type": "git",

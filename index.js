@@ -1,4 +1,3 @@
-var Entity = require('sourced').Entity;
 var EventEmitter = require('events').EventEmitter;
 var log = require('debug')('sourced-repo-mongo');
 var mongo = require('./mongo');
@@ -8,12 +7,12 @@ var _ = require('lodash');
 function Repository (entityType, options) {
   options = options || {};
   EventEmitter.call(this);
-  if ( ! mongo.db) {
+  if ( ! options.db && ! mongo.db) {
     throw new Error('mongo has not been initialized. you must call require(\'sourced-repo-mongo/mongo\').connect(config.MONGO_URL); before instantiating a Repository');
   }
   var indices = _.union(options.indices, ['id']);
   var self = this;
-  var db = mongo.db;
+  var db = options.db || mongo.db;
   self.entityType = entityType;
   self.indices = indices;
   self.snapshotFrequency = options.snapshotFrequency || 10;
@@ -74,7 +73,7 @@ Repository.prototype.commitAll = function commit (entities, options, cb) {
 
   var self = this;
 
-  log('committing %s for id %j', this.entityType.name, _.pluck(entities, 'id'));
+  log('committing %s for id %j', this.entityType.name, _.map(entities, 'id'));
 
   this._commitAllEvents(entities, function _afterCommitEvents (err) {
     if (err) return cb(err);
@@ -198,7 +197,7 @@ Repository.prototype._commitAllEvents = function _commitEvents (entities, cb) {
 
   self.events.insert(events, function (err) {
     if (err) return cb(err);
-    log('committed %s.events for ids %j', self.entityType.name, _.pluck(entities, 'id'));
+    log('committed %s.events for ids %j', self.entityType.name, _.map(entities, 'id'));
     entities.forEach(function (entity) {
       entity.newEvents = [];
     });
@@ -242,7 +241,7 @@ Repository.prototype._commitAllSnapshots = function _commitAllSnapshots (entitie
 
   self.snapshots.insert(snapshots, function (err) {
     if (err) return cb(err);
-    log('committed %s.snapshot for ids %s %j', self.entityType.name, _.pluck(entities, 'id'), snapshots);
+    log('committed %s.snapshot for ids %s %j', self.entityType.name, _.map(entities, 'id'), snapshots);
     return cb(null, entities);
   });
 
@@ -276,28 +275,30 @@ Repository.prototype._getAllSnapshots = function _getAllSnapshots (ids, cb) {
   var sort = { $sort: { snapshotVersion: 1 } };
   var group = { $group: { _id: '$id', snapshotVersion: { $last: '$snapshotVersion' } } };
 
-  self.snapshots.aggregate([match, sort, group], function (err, idVersionPairs) {
+  self.snapshots.aggregate([match, sort, group], function (err, cursor) {
     if (err) return cb(err);
-    var criteria = {};
-    if (idVersionPairs.length === 0) {
-      return cb(null, []);
-    } else if (idVersionPairs.length === 1) {
-      criteria = { id: idVersionPairs[0]._id, snapshotVersion: idVersionPairs[0].snapshotVersion };
-    } else {
-      criteria.$or = [];
-      idVersionPairs.forEach(function (pair) {
-        var cri = { id: pair._id, snapshotVersion: pair.snapshotVersion };
-        criteria.$or.push(cri);
-      });
-    }
-    self.snapshots
-      .find(criteria)
-      .toArray(function (err, snapshots) {
-        if (err) cb(err);
-        return cb(null, snapshots);
-      });
+    cursor.toArray(function (err, idVersionPairs) {
+      if (err) return cb(err);
+      var criteria = {};
+      if (idVersionPairs.length === 0) {
+        return cb(null, []);
+      } else if (idVersionPairs.length === 1) {
+        criteria = { id: idVersionPairs[0]._id, snapshotVersion: idVersionPairs[0].snapshotVersion };
+      } else {
+        criteria.$or = [];
+        idVersionPairs.forEach(function (pair) {
+          var cri = { id: pair._id, snapshotVersion: pair.snapshotVersion };
+          criteria.$or.push(cri);
+        });
+      }
+      self.snapshots
+        .find(criteria)
+        .toArray(function (err, snapshots) {
+          if (err) cb(err);
+          return cb(null, snapshots);
+        });
+    });
   });
-
 };
 
 Repository.prototype._getAllEvents = function _getAllEvents (ids, snapshots, cb) {
