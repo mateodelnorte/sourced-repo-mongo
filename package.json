@@ -1,6 +1,6 @@
 {
   "name": "sourced-repo-mongo",
-  "version": "0.3.13",
+  "version": "0.3.14",
   "description": "mongo data store and repository for sourced-style event sourcing models",
   "main": "index.js",
   "directories": {
@@ -20,7 +20,8 @@
     "should": "^4.0.0"
   },
   "scripts": {
-    "test": "DEBUG= ./node_modules/.bin/mocha test -R spec"
+    "test": "DEBUG= ./node_modules/.bin/mocha test -R spec",
+    "pub": "npm publish --registry https://npm.saas-plat.com"
   },
   "repository": {
     "type": "git",
