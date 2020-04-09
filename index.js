@@ -17,10 +17,10 @@ function Repository (entityType, options) {
   self.indices = indices;
   self.snapshotFrequency = options.snapshotFrequency || 10;
 
-  var snapshotCollectionName = util.format('%s.snapshots', options.collection || entityType.name);
+  var snapshotCollectionName = util.format('%s.snapshots', (options && options.collection) || entityType.name);
   var snapshots = db.collection(snapshotCollectionName);
   self.snapshots = snapshots;
-  var eventCollectionName = util.format('%s.events', options.collection || entityType.name);
+  var eventCollectionName = util.format('%s.events', (options && options.collection) || entityType.name);
   var events = db.collection(eventCollectionName);
   self.events = events;
 
