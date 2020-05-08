@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "jest": "24.7.1",
-    "mocha": "6.0.0",
+    "mocha": "6.2.3",
     "should": "13.2.3"
   },
   "scripts": {
