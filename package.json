@@ -7,10 +7,10 @@
     "test": "test"
   },
   "dependencies": {
-    "debug": "^4.1.1",
-    "lodash": "^4.17.15",
-    "mongodb": "^3.5.7",
-    "sourced": "^2.0.6"
+    "debug": "4.1.1",
+    "lodash": "4.17.15",
+    "mongodb": "3.5.7",
+    "sourced": "2.0.5"
   },
   "devDependencies": {
     "jest": "26.0.1",

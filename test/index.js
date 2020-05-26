@@ -186,7 +186,12 @@ describe('Repository', function () {
       repository.get(id, function (err, market) {
         if (err) throw err;
 
+        log('!!! err', err)
+        log('!!! market', market)
+        log('!!! market.on', market.on)
+
         market.on('myEventHappened', function (data, data2) {
+          log('myEventHappened', { data, data })
           market.eventsToEmit.should.have.property('length', 0);
           market.newEvents.should.have.property('length', 0);
           data.should.have.property('data', 'data');

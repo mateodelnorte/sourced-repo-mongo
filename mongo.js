@@ -22,7 +22,10 @@ Mongo.prototype.connect = function connect (mongoUrl, database) {
     self.on('error', (err) => {
       reject(err)
     })
-    MongoClient.connect(mongoUrl, function (err, client) {
+    MongoClient.connect(mongoUrl, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    }, function (err, client) {
       if (err) {
         log('✗ MongoDB Connection Error. Please make sure MongoDB is running: ', err);
         self.emit('error', err);
