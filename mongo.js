@@ -13,7 +13,10 @@ function Mongo () {
 
 util.inherits(Mongo, EventEmitter);
 
-Mongo.prototype.connect = function connect (mongoUrl) {
+Mongo.prototype.connect = function connect (mongoUrl, database, options = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}) {
   var self = this;
   return new Promise((resolve, reject) => {
     self.on('connected', (db) => {
@@ -22,13 +25,14 @@ Mongo.prototype.connect = function connect (mongoUrl) {
     self.on('error', (err) => {
       reject(err)
     })
-    MongoClient.connect(mongoUrl, function (err, client) {
+    MongoClient.connect(mongoUrl, options, function (err, client) {
       if (err) {
         log('✗ MongoDB Connection Error. Please make sure MongoDB is running: ', err);
         self.emit('error', err);
       }
       var expanded = url.parse(mongoUrl);
-      var dbName = expanded.pathname.replace('/', '');
+      // replica set url does not include db, it is passed in separately
+      var dbName = database || expanded.pathname.replace('/', '');
       self.client = client;
       var db = client.db(dbName);
       self.db = db;

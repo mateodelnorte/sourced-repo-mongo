@@ -1,22 +1,18 @@
 language: node_js
 node_js:
-  - 8
-  - 10
-  - 11
-
+  - '12'
+  - '14'
+cache: npm
 notifications:
   email: false
-
-before_install:
-  - npm install -g codecov
 script:
   - make test
+after_success:
+  - npm install -g codecov
   - codecov
-
 branches:
   except:
     - '/^v\d+\.\d+\.\d+$/'
-
 jobs:
   include:
     - stage: deploy
