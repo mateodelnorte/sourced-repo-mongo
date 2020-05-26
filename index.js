@@ -122,7 +122,6 @@ Repository.prototype._getByIndex = function _getByIndex (index, value, cb) {
           var id = (index === 'id') ? value : (snapshot) ? snapshot.id : events[0].id;
 
           var entity = self._deserialize(id, snapshot, events);
-          log('returning entity from repository.get', entity)
           return cb(null, entity);
         });
   });
