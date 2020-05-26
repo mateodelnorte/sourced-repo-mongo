@@ -13,7 +13,7 @@ function Mongo () {
 
 util.inherits(Mongo, EventEmitter);
 
-Mongo.prototype.connect = function connect (mongoUrl) {
+Mongo.prototype.connect = function connect (mongoUrl, database) {
   var self = this;
   return new Promise((resolve, reject) => {
     self.on('connected', (db) => {
@@ -28,7 +28,8 @@ Mongo.prototype.connect = function connect (mongoUrl) {
         self.emit('error', err);
       }
       var expanded = url.parse(mongoUrl);
-      var dbName = expanded.pathname.replace('/', '');
+      // replica set url does not include db, it is passed in separately
+      var dbName = database || expanded.pathname.replace('/', '');
       self.client = client;
       var db = client.db(dbName);
       self.db = db;
