@@ -13,7 +13,7 @@
     "sourced": "2.0.8"
   },
   "devDependencies": {
-    "jest": "26.0.1",
+    "jest": "27.0.4",
     "mocha": "7.2.0",
     "should": "13.2.3"
   },
