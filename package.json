@@ -9,7 +9,7 @@
   "dependencies": {
     "debug": "4.3.1",
     "lodash": "4.17.21",
-    "mongodb": "3.6.9",
+    "mongodb": "5.8.1",
     "sourced": "2.0.8"
   },
   "devDependencies": {
